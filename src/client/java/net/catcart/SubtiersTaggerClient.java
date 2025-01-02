@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.isxander.yacl3.api.*;
+import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
+import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.catcart.config.GameMode;
 import net.catcart.config.SubtierConfig;
@@ -41,33 +43,6 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
 			dispatcher.register(
 					com.mojang.brigadier.builder.LiteralArgumentBuilder
-							.<FabricClientCommandSource>literal("subtiers")
-							.then(
-									com.mojang.brigadier.builder.RequiredArgumentBuilder
-											.<FabricClientCommandSource, String>argument("gamemode", StringArgumentType.word())
-											.suggests(((context, builder) -> CommandSource.suggestMatching(gamemodes, builder)))
-											.executes(ctx -> {
-												String gamemodeName = StringArgumentType.getString(ctx, "gamemode");
-
-												Optional<GameMode> gameModeOptional = GameMode.byKey(gamemodeName);
-												if (gameModeOptional.isEmpty()) {
-													return 1;
-												}
-
-												GameMode gameMode = gameModeOptional.get();
-
-												SubtierConfig.setCurrentGameMode(gameMode);
-												clearAllCaches();
-												SubtierConfig.HANDLER.save();
-												return 0;
-											})
-							)
-			);
-		});
-
-		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
-			dispatcher.register(
-					com.mojang.brigadier.builder.LiteralArgumentBuilder
 							.<FabricClientCommandSource>literal("subtiertagger")
 							.then(
 									com.mojang.brigadier.builder.RequiredArgumentBuilder
@@ -81,6 +56,39 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 			);
 		});
 
+		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
+			dispatcher.register(
+					com.mojang.brigadier.builder.LiteralArgumentBuilder
+							.<FabricClientCommandSource>literal("stt")
+							.then(
+									com.mojang.brigadier.builder.RequiredArgumentBuilder
+											.<FabricClientCommandSource, String>argument("username", StringArgumentType.word())
+											.executes(ctx -> {
+												String username = StringArgumentType.getString(ctx, "username");
+
+												fetchAndDisplayTiers(username);
+
+												return 0;
+											})
+							)
+			);
+		});
+
+		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
+			dispatcher.register(
+					com.mojang.brigadier.builder.LiteralArgumentBuilder
+							.<FabricClientCommandSource>literal("stttoggle")
+							.executes(context -> {
+								if (SubtierConfig.getEnabled() == false){
+									SubtierConfig.setEnabled(true);
+								} else if (SubtierConfig.getEnabled() == true){
+									SubtierConfig.setEnabled(false);
+								}
+								return 0;
+							})
+			);
+		});
+
 		myKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"Open Config", // Translation key
 				InputUtil.Type.KEYSYM, // Key type
@@ -91,29 +99,36 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (myKeyBinding.wasPressed()) {
 				if (client.player != null) {
-					YetAnotherConfigLib.createBuilder()
-							.title(Text.literal("SubTierTagger Config"))
-							.category(ConfigCategory.createBuilder()
-									.name(Text.literal("Name of the category"))
-									.tooltip(Text.literal("This text will appear as a tooltip when you hover or focus the button with Tab. There is no need to add \n to wrap as YACL will do it for you."))
-									.group(OptionGroup.createBuilder()
-											.name(Text.literal("Config"))
-											.option(Option.<Boolean>createBuilder()
-													.name(Text.literal("Enabled"))
-													.binding(
-															true,
-															() -> SubtierConfig.getEnabled(),
-															newVal -> SubtierConfig.setEnabled(newVal)
-													)
-													.controller(TickBoxControllerBuilder::create)
-													.build())
-											.build())
-									.build())
-							.build()
-							.generateScreen(MinecraftClient.getInstance().currentScreen);
+					MinecraftClient.getInstance().execute(() -> {
+						MinecraftClient.getInstance().setScreen(
+								YetAnotherConfigLib.createBuilder()
+										.title(Text.literal("SubTierTagger"))
+										.category(ConfigCategory.createBuilder()
+												.name(Text.literal("SubTierTagger Config"))
+												.group(OptionGroup.createBuilder()
+														.name(Text.literal("Config"))
+														.option(Option.<Boolean>createBuilder()
+																.name(Text.literal("Enable"))
+																.binding(true, SubtierConfig::getEnabled, SubtierConfig::setEnabled)
+																.controller(opt -> BooleanControllerBuilder.create(opt).coloured(true))
+																.build())
+														.option(Option.<GameMode>createBuilder()
+																.name(Text.literal("Gamemode"))
+																.binding(GameMode.MINECART, SubtierConfig::getCurrentGameMode, SubtierConfig::setCurrentGameMode)
+																.controller(opt -> EnumControllerBuilder.create(opt)
+																		.enumClass(GameMode.class)
+																		.formatValue(GameMode::formatted))
+																.build())
+														.build())
+												.build())
+										.build()
+										.generateScreen(MinecraftClient.getInstance().currentScreen)
+						);
+					});
 				}
 			}
 		});
+
 
 	}
 
