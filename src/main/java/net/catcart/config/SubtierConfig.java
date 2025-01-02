@@ -86,12 +86,6 @@ public class SubtierConfig implements Serializable {
         colors.put("RLT1", 0xFFB6C1);
         colors.put("RHT2", 0xFFA500);
         colors.put("RLT2", 0xFFE4B5);
-        colors.put("RHT3", 0xDAA520);
-        colors.put("RLT3", 0xEEE8AA);
-        colors.put("RHT4", 0x006400);
-        colors.put("RLT4", 0x90EE90);
-        colors.put("RHT5", 0x808080);
-        colors.put("RLT5", 0xD3D3D3);
         return colors;
     }
 
