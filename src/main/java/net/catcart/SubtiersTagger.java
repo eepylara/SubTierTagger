@@ -20,6 +20,8 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -69,16 +71,53 @@ public class SubtiersTagger implements ModInitializer {
 		}
 
 		CachedTier cachedTier = tiers.get(index).getRight();
-		if (cachedTier == null || cachedTier.isExpired() || NO_TIER.equals(cachedTier.getTier())) {
+		if (cachedTier == null || cachedTier.isExpired()) {
 			return text; // Skip if no valid tier data
 		}
 
 		if (cachedTier != null && !cachedTier.isExpired()) {
-			if (NO_TIER.equals(cachedTier.getTier())) {
-				return text; // Skip if "NoTier" is cached
+			if (cachedTier == null || NO_TIER.equals(cachedTier.getTier())) {
+				// Find the highest tier from all game modes
+				CachedTier highestTier = null;
+				GameMode highestGameMode = null;
+				for (Pair<GameMode, CachedTier> tierPair : tiers) {
+					CachedTier currentTier = tierPair.getRight();
+					if (currentTier != null && !NO_TIER.equals(currentTier.getTier())) {
+						if (highestTier == null || compareTiers(currentTier.getTier(), highestTier.getTier()) > 0) {
+							highestTier = currentTier;
+							highestGameMode = tierPair.getLeft();  // Keep track of the corresponding game mode
+						}
+					}
+				}
+
+				// If a highest tier is found, set it for the active game mode
+				if (highestTier != null) {
+					MutableText mutableText = Text.literal(text.getString());
+					int tierColor = SubtierConfig.getColor(highestTier.getTier()); // Get color based on tier
+					Text formattedTier = Text.literal(highestTier.getTier()).styled(style -> style.withColor(TextColor.fromRgb(tierColor)));
+
+					// Append the tier
+					mutableText.append(" | ").formatted(Formatting.GRAY);
+					mutableText.append(formattedTier);
+
+					// Append GameMode icon if a tier exists
+					String icon = highestGameMode.getIcon();
+					TextColor color = highestGameMode.getIconColor();
+					Text gamemodeText = Text.literal(icon).styled(style -> style.withColor(color));
+
+					// Append the GameMode icon behind the tier
+					mutableText.append(" ").append(gamemodeText);
+
+					displayNameCache.put(uuid, mutableText);
+					return mutableText;
+				} else {
+					return text; // Skip if no valid tier found
+				}
 			}
 
-			String tier = cachedTier.getTier();
+			if (cachedTier.isExpired()) {
+				return text; // Skip if expired tier data
+			}
 
 			// Check if the text is already cached in displayNameCache
 			if (displayNameCache.containsKey(uuid)) {
@@ -87,8 +126,8 @@ public class SubtiersTagger implements ModInitializer {
 
 			// Convert original text to MutableText for appending
 			MutableText mutableText = Text.literal(text.getString());
-			int tiercolor = SubtierConfig.getColor(tier); // Get color based on tier
-			Text formattedTier = Text.literal(tier).styled(style -> style.withColor(TextColor.fromRgb(tiercolor)));
+			int tierColor = SubtierConfig.getColor(cachedTier.getTier()); // Get color based on tier
+			Text formattedTier = Text.literal(cachedTier.getTier()).styled(style -> style.withColor(TextColor.fromRgb(tierColor)));
 
 			// Append the tier
 			mutableText.append(" | ").formatted(Formatting.GRAY);
@@ -115,6 +154,10 @@ public class SubtiersTagger implements ModInitializer {
 
 
 
+	private static int compareTiers(String tier1, String tier2) {
+		List<String> tierOrder = Arrays.asList("LT5", "HT5", "LT4", "HT4", "LT3", "HT3", "RLT2", "LT2", "RHT2", "RHT1", "LT1", "RTLT1", "RLT1", "HT1");
+		return Integer.compare(tierOrder.indexOf(tier1), tierOrder.indexOf(tier2));
+	}
 
 
 	public static void clearAllCaches() {
