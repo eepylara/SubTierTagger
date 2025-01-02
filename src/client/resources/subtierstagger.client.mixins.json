@@ -3,7 +3,8 @@
 	"package": "net.catcart.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleClientMixin"
+		"ExampleClientMixin",
+		"YACLScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
