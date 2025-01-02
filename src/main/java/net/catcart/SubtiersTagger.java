@@ -31,6 +31,7 @@ public class SubtiersTagger implements ModInitializer {
 
 	// Cache for tier information
 	private static final ConcurrentHashMap<UUID, CachedTier> playerTiers = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<UUID, ArrayList<Pair<GameMode, CachedTier>>> allPlayerTiers = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<UUID, Text> displayNameCache = new ConcurrentHashMap<>();
 	private static final CopyOnWriteArraySet<UUID> ongoingFetches = new CopyOnWriteArraySet<>();
 	private static final long DISPLAY_NAME_CACHE_EXPIRATION = 1000; // 1 second
@@ -47,9 +48,31 @@ public class SubtiersTagger implements ModInitializer {
 
 	public static Text appendTier(PlayerEntity player, Text text) {
 		UUID uuid = player.getUuid();
+		GameMode activeMode = SubtierConfig.getCurrentGameMode();
+		GameMode lastUsedMode = SubtierConfig.getLastUsedGameMode();
 
-		// Check for cached tier
-		CachedTier cachedTier = playerTiers.get(uuid);
+		if (lastUsedMode != activeMode){
+			displayNameCache.clear();
+		}
+
+
+		if (!allPlayerTiers.containsKey(uuid)) {
+			fetchTierAsync(player);
+			return text; // Return original text while data is being fetched
+		}
+
+		int index = activeMode.ordinal();
+		ArrayList<Pair<GameMode, CachedTier>> tiers = allPlayerTiers.get(uuid);
+		if (tiers == null || tiers.size() <= index) {
+			LOGGER.warn("Tier data not initialized correctly for player: {}", player.getName().getString());
+			return text;
+		}
+
+		CachedTier cachedTier = tiers.get(index).getRight();
+		if (cachedTier == null || cachedTier.isExpired() || NO_TIER.equals(cachedTier.getTier())) {
+			return text; // Skip if no valid tier data
+		}
+
 		if (cachedTier != null && !cachedTier.isExpired()) {
 			if (NO_TIER.equals(cachedTier.getTier())) {
 				return text; // Skip if "NoTier" is cached
@@ -72,7 +95,6 @@ public class SubtiersTagger implements ModInitializer {
 			mutableText.append(formattedTier);
 
 			// Append GameMode icon if a tier exists
-			GameMode activeMode = SubtierConfig.getCurrentGameMode();
 			String icon = activeMode.getIcon();
 			TextColor color = activeMode.getIconColor();
 			Text gamemodeText = Text.literal(icon).styled(style -> style.withColor(color));
@@ -81,6 +103,7 @@ public class SubtiersTagger implements ModInitializer {
 			mutableText.append(" ").append(gamemodeText);
 
 			// Cache the result and return
+			SubtierConfig.setLastUsedGameMode(activeMode);
 			displayNameCache.put(uuid, mutableText);
 			return mutableText;
 		}
@@ -104,17 +127,8 @@ public class SubtiersTagger implements ModInitializer {
 	public static void fetchTierAsync(PlayerEntity player) {
 		UUID uuid = player.getUuid();
 
-		// Avoid duplicate fetches or repeated fetches too soon
 		if (!ongoingFetches.add(uuid)) {
 			return; // Already fetching
-		}
-
-		// Check if we have a cached tier and if it is expired or marked as "NoTier"
-		CachedTier cachedTier = playerTiers.get(uuid);
-		if (cachedTier != null && !cachedTier.isExpired()) {
-			if (NO_TIER.equals(cachedTier.getTier())) {
-				return; // Avoid retrying if tier was already determined to be missing
-			}
 		}
 
 		new Thread(() -> {
@@ -132,45 +146,42 @@ public class SubtiersTagger implements ModInitializer {
 
 					int responseCode = connection.getResponseCode();
 
-					if (responseCode == 404) {
-						LOGGER.info("No tier data found for player: {}", player.getName().getString());
-						playerTiers.put(uuid, new CachedTier(NO_TIER)); // Cache "NoTier"
-						success = true; // No need to retry
-					} else if (responseCode == 422) {
-						LOGGER.warn("Server returned 422 for player {}: Invalid tier data or unavailable.", player.getName().getString());
-						playerTiers.put(uuid, new CachedTier(NO_TIER)); // Cache "NoTier"
+					if (responseCode == 404 || responseCode == 422) {
+						LOGGER.warn("No valid tier data found for player: {}", player.getName().getString());
+						// Populate allPlayerTiers with default NO_TIER for all game modes
+						for (GameMode gameMode : GameMode.values()) {
+							ArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new ArrayList<>());
+							tierList.add(new Pair<>(gameMode, new CachedTier(NO_TIER)));
+						}
 						success = true; // No need to retry
 					} else if (responseCode == 200) {
 						InputStreamReader reader = new InputStreamReader(connection.getInputStream());
 						JsonObject jsonResponse = JsonParser.parseReader(reader).getAsJsonObject();
-						JsonObject gamemode = jsonResponse.getAsJsonObject(SubtierConfig.getCurrentGameMode().getApiKey());
 
-						if (gamemode != null && gamemode.has("tier") && gamemode.has("pos")) {
-							int tier = gamemode.get("tier").getAsInt();
-							int pos = gamemode.get("pos").getAsInt();
-							String position = (pos == 0) ? "HT" : "LT";
-							String retired;
+						// Populate tiers for each game mode
+						for (GameMode gameMode : GameMode.values()) {
+							JsonObject gamemodeData = jsonResponse.getAsJsonObject(gameMode.getApiKey());
+							ArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new ArrayList<>());
 
-							if (gamemode.get("retired").getAsString() == "true"){
-								retired = "R";
+							if (gamemodeData != null && gamemodeData.has("tier") && gamemodeData.has("pos")) {
+								int tier = gamemodeData.get("tier").getAsInt();
+								int pos = gamemodeData.get("pos").getAsInt();
+								String position = (pos == 0) ? "HT" : "LT";
+								String retired = gamemodeData.has("retired") && gamemodeData.get("retired").getAsBoolean() ? "R" : "";
+								String formattedTier = retired + position + tier;
+
+								tierList.add(new Pair<>(gameMode, new CachedTier(formattedTier)));
+								LOGGER.info("Fetched tier for player {}: {}", player.getName().getString(), formattedTier);
 							} else {
-								retired = "";
+								tierList.add(new Pair<>(gameMode, new CachedTier(NO_TIER)));
+								LOGGER.warn("Incomplete or invalid tier data for player: {}", player.getName().getString());
 							}
-
-							String formattedTier = retired + position + tier;
-							playerTiers.put(uuid, new CachedTier(formattedTier));
-
-							LOGGER.info("Fetched tier for player {}: {}", player.getName().getString(), formattedTier);
-							success = true; // Successfully fetched
-						} else {
-							LOGGER.warn("Incomplete or invalid tier data for player: {}", player.getName().getString());
-							playerTiers.put(uuid, new CachedTier(NO_TIER)); // Cache as "NoTier"
-							success = true; // No need to retry
 						}
+						success = true; // Successfully fetched
 					} else {
 						LOGGER.error("Unexpected response code {} while fetching tier for player: {}", responseCode, player.getName().getString());
 					}
-				} catch (java.net.SocketTimeoutException e) {
+				} catch (SocketTimeoutException e) {
 					LOGGER.warn("Timeout while fetching tier for player: {}", player.getName().getString());
 				} catch (Exception e) {
 					LOGGER.error("Failed to fetch tier for player {}", player.getName().getString(), e);
@@ -189,7 +200,11 @@ public class SubtiersTagger implements ModInitializer {
 
 			if (!success) {
 				LOGGER.error("Failed to fetch tier for player {} after {} attempts.", player.getName().getString(), retryAttempts);
-				playerTiers.put(uuid, new CachedTier(NO_TIER)); // Cache as "NoTier" after multiple failed attempts
+				// Populate allPlayerTiers with default NO_TIER for all game modes as fallback
+				for (GameMode gameMode : GameMode.values()) {
+					ArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new ArrayList<>());
+					tierList.add(new Pair<>(gameMode, new CachedTier(NO_TIER)));
+				}
 			}
 
 			ongoingFetches.remove(uuid); // Ensure ongoing fetch is cleared
