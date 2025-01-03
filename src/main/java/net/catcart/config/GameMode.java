@@ -16,7 +16,7 @@ public enum GameMode implements TranslatableOption {
     MINECART(2, "Minecart", "minecart", "\uD83D\uDED2", TextColor.fromRgb(0xFF0000)),
     SPEED(3, "Speed", "speed", "⚡", TextColor.fromRgb(0xFFE4B5)),
     CREEPER(4, "Creeper", "creeper", "\ud83d\udc38", TextColor.fromRgb(0x008000)),
-    DIA_SMP(5, "Dia SMP", "dia_smp", "💎", TextColor.fromRgb(0x90D5FF)),
+    DIA_SMP(5, "Diamond SMP", "dia_smp", "💎", TextColor.fromRgb(0x90D5FF)),
     IRON_POT(6, "Iron Pot", "iron_pot", "\ud83d\udee1", TextColor.fromRgb(0xc0c0c0)),
     OG_VANILLA(7, "OG Vanilla", "og_vanilla", "\ud83c\udf4e", TextColor.fromRgb(0xD4AF37)),
     MANHUNT(8, "Manhunt", "manhunt", "\ud83e\udded", TextColor.fromRgb(0x90EE90)),
