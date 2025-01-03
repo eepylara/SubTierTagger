@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class SubtiersTagger implements ModInitializer {
@@ -33,7 +34,7 @@ public class SubtiersTagger implements ModInitializer {
 
 	// Cache for tier information
 	private static final ConcurrentHashMap<UUID, CachedTier> playerTiers = new ConcurrentHashMap<>();
-	private static final ConcurrentHashMap<UUID, ArrayList<Pair<GameMode, CachedTier>>> allPlayerTiers = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<UUID, CopyOnWriteArrayList<Pair<GameMode, CachedTier>>> allPlayerTiers = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<UUID, Text> displayNameCache = new ConcurrentHashMap<>();
 	private static final CopyOnWriteArraySet<UUID> ongoingFetches = new CopyOnWriteArraySet<>();
 	private static final long DISPLAY_NAME_CACHE_EXPIRATION = 1000; // 1 second
@@ -64,7 +65,7 @@ public class SubtiersTagger implements ModInitializer {
 		}
 
 		int index = activeMode.ordinal();
-		ArrayList<Pair<GameMode, CachedTier>> tiers = allPlayerTiers.get(uuid);
+		CopyOnWriteArrayList<Pair<GameMode, CachedTier>> tiers = allPlayerTiers.get(uuid);
 		if (tiers == null || tiers.size() <= index) {
 			LOGGER.warn("Tier data not initialized correctly for player: {}", player.getName().getString());
 			return text;
@@ -182,7 +183,7 @@ public class SubtiersTagger implements ModInitializer {
 					if (responseCode == 404 || responseCode == 422) {
 						LOGGER.warn("No valid tier data found for player: {}", player.getName().getString());
 						for (GameMode gameMode : GameMode.values()) {
-							ArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new ArrayList<>());
+							CopyOnWriteArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new CopyOnWriteArrayList<>());
 							tierList.add(new Pair<>(gameMode, new CachedTier(NO_TIER)));
 						}
 						success = true;
@@ -192,7 +193,7 @@ public class SubtiersTagger implements ModInitializer {
 
 						for (GameMode gameMode : GameMode.values()) {
 							JsonObject gamemodeData = jsonResponse.getAsJsonObject(gameMode.getApiKey());
-							ArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new ArrayList<>());
+							CopyOnWriteArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new CopyOnWriteArrayList<>());
 
 							if (gamemodeData != null && gamemodeData.has("tier") && gamemodeData.has("pos")) {
 								int tier = gamemodeData.get("tier").getAsInt();
@@ -231,7 +232,7 @@ public class SubtiersTagger implements ModInitializer {
 			if (!success) {
 				LOGGER.error("Failed to fetch tier for player {} after {} attempts.", player.getName().getString(), retryAttempts);
 				for (GameMode gameMode : GameMode.values()) {
-					ArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new ArrayList<>());
+					CopyOnWriteArrayList<Pair<GameMode, CachedTier>> tierList = allPlayerTiers.computeIfAbsent(uuid, k -> new CopyOnWriteArrayList<>());
 					tierList.add(new Pair<>(gameMode, new CachedTier(NO_TIER)));
 				}
 			}
