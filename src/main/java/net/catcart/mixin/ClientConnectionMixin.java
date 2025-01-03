@@ -10,10 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientConnection.class)
 public class ClientConnectionMixin {
-
     @Inject(method = "disconnect", at = @At("HEAD"))
     public void onDisconnect(Text reason, CallbackInfo ci) {
-        // Clear all cached data when disconnecting from a server
         SubtiersTagger.clearAllCaches();
     }
 }
