@@ -49,7 +49,6 @@ public class SubtierConfig implements Serializable {
 
     private static LinkedTreeMap<String, Integer> tierColors = defaultColorsTiers();
 
-    // Getter for current game mode
     public static GameMode getCurrentGameMode() {
         return currentGameMode;
     }
@@ -60,13 +59,12 @@ public class SubtierConfig implements Serializable {
         enabled = val;
     }
 
-    // Setter for current game mode
     public static void setCurrentGameMode(GameMode gameMode) {
         currentGameMode = gameMode;
     }
 
     public static int getColor(String tier) {
-        return tierColors.getOrDefault(tier, 0xFFFFFF); // Default to white if no color is defined
+        return tierColors.getOrDefault(tier, 0xFFFFFF);
     }
 
 

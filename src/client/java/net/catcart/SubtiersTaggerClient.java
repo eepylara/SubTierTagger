@@ -31,8 +31,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Optional;
 
-import static net.catcart.SubtiersTagger.clearAllCaches;
-
 public class SubtiersTaggerClient implements ClientModInitializer {
 	public static final String[] gamemodes = new String[]{"minecart", "bed", "mace", "og_vanilla", "speed", "dia_smp", "iron_pot", "creeper", "bow", "manhunt"};
 
@@ -90,10 +88,10 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 		});
 
 		myKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"Open Config", // Translation key
-				InputUtil.Type.KEYSYM, // Key type
-				GLFW.GLFW_KEY_H, // Default key (G)
-				"SubTierTagger" // Keybinding category
+				"Open Config",
+				InputUtil.Type.KEYSYM,
+				GLFW.GLFW_KEY_H,
+				"SubTierTagger"
 		));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -135,7 +133,6 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 	private void fetchAndDisplayTiers(String username) {
 		new Thread(() -> {
 			try {
-				// Construct the API URL
 				String uuid = getUuidFromUsername(username).get();
 				String formattedUuid = uuid.toString().replace("-", "");
 				URL url = new URL("https://subtiers.net/api/rankings/" + formattedUuid);
@@ -149,12 +146,10 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 					JsonObject jsonResponse = JsonParser.parseReader(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
 
 					MinecraftClient client = MinecraftClient.getInstance();
-					// Use MutableText for building the result message
 					Text tiers = Text.literal("Tiers for " + username + ":").formatted(Formatting.BOLD);
 					MutableText resultMessage = Text.literal("");
 					resultMessage.append(tiers);
 
-					// Loop through all gamemodes
 					for (GameMode gameMode : GameMode.values()) {
 						String apiKey = gameMode.getApiKey();
 						if (jsonResponse.has(apiKey)) {
@@ -179,16 +174,12 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 
 							Text gamemode = Text.literal(gameMode.getTranslationKey()).formatted(Formatting.BOLD).styled(style -> style.withColor(gameMode.getIconColor()));
 
-							// Create formatted text for this gamemode
 							MutableText gamemodeText = Text.literal(gameMode.getIcon() + " ").styled(style -> style.withColor(gameMode.getIconColor())).append(gamemode).append(" - ").append(formattedTier);
 
-
-							// Add to the result message
 							resultMessage.append(Text.literal("\n").append(gamemodeText));
 						}
 					}
 
-					// Display the result in chat on the main thread
 					client.execute(() -> client.player.sendMessage(resultMessage, false));
 				} else {
 					sendErrorMessage("Failed to fetch data for user: " + username);
@@ -207,19 +198,15 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 
 	public Optional<String> getUuidFromUsername(String username) {
 		try {
-			// Construct the URL for Mojang's API
 			URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
 			connection.setConnectTimeout(5000);
 			connection.setReadTimeout(5000);
 
-			// Check the response code
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200) {
-				// Parse the response as JSON
 				JsonObject jsonResponse = JsonParser.parseReader(new InputStreamReader(connection.getInputStream())).getAsJsonObject();
-				// Extract the UUID from the JSON
 				return Optional.of(jsonResponse.get("id").getAsString());
 			} else if (responseCode == 204) {
 				System.err.println("No UUID found for username: " + username);
@@ -231,7 +218,6 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 			e.printStackTrace();
 		}
 
-		// Return empty if no UUID could be found
 		return Optional.empty();
 	}
 

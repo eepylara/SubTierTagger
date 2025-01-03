@@ -17,13 +17,11 @@ public class ExampleMixin {
 		if (SubtierConfig.getEnabled() == true){
 			PlayerEntity self = (PlayerEntity) (Object) this;
 
-			// Check if the display name is already modified to avoid appending twice
 			Text cachedName = SubtiersTagger.getDisplayNameCache().get(self.getUuid());
 			if (cachedName != null) {
-				return cachedName; // Return cached name to avoid appending again
+				return cachedName;
 			}
 
-			// If not cached, apply the tier and icon logic
 			return SubtiersTagger.appendTier(self, original);
 		} else {
 			return original;
