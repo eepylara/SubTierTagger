@@ -14,15 +14,20 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.command.CommandSource;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -38,6 +43,10 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+
+
+
+
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
 			dispatcher.register(
 					com.mojang.brigadier.builder.LiteralArgumentBuilder
@@ -115,7 +124,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 																.binding(GameMode.MINECART, SubtierConfig::getCurrentGameMode, SubtierConfig::setCurrentGameMode)
 																.controller(opt -> EnumControllerBuilder.create(opt)
 																		.enumClass(GameMode.class)
-																		.formatValue(GameMode::formatted))
+																		.formatValue(GameMode::configFormatted))
 																.build())
 														.build())
 												.build())
@@ -174,7 +183,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 
 							Text gamemode = Text.literal(gameMode.getTranslationKey()).formatted(Formatting.BOLD).styled(style -> style.withColor(gameMode.getIconColor()));
 
-							MutableText gamemodeText = Text.literal(gameMode.getIcon() + " ").styled(style -> style.withColor(gameMode.getIconColor())).append(gamemode).append(" - ").append(formattedTier);
+							MutableText gamemodeText = Text.literal(gameMode.getIcon() + " ").append(gamemode).append(" - ").append(formattedTier);
 
 							resultMessage.append(Text.literal("\n").append(gamemodeText));
 						}
