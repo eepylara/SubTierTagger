@@ -11,16 +11,16 @@ import java.util.Optional;
 
 @Getter
 public enum GameMode implements TranslatableOption {
-    BOW(0, "Bow", "bow", "🏹", TextColor.fromRgb(0x964B00)),
-    BED(1, "Bed", "bed", "🛏", TextColor.fromRgb(0xFFB6C1)),
-    MINECART(2, "Minecart", "minecart", "\uD83D\uDED2", TextColor.fromRgb(0xFF0000)),
-    SPEED(3, "Speed", "speed", "⚡", TextColor.fromRgb(0xFFE4B5)),
-    CREEPER(4, "Creeper", "creeper", "\ud83d\udc38", TextColor.fromRgb(0x008000)),
-    DIA_SMP(5, "Diamond SMP", "dia_smp", "💎", TextColor.fromRgb(0x90D5FF)),
-    IRON_POT(6, "Iron Pot", "iron_pot", "\ud83d\udee1", TextColor.fromRgb(0xc0c0c0)),
-    OG_VANILLA(7, "OG Vanilla", "og_vanilla", "\ud83c\udf4e", TextColor.fromRgb(0xD4AF37)),
-    MANHUNT(8, "Manhunt", "manhunt", "\ud83e\udded", TextColor.fromRgb(0x90EE90)),
-    MACE(9, "Mace", "mace", "\ud83d\udd28", TextColor.fromRgb(0xA9A9A9));
+    BOW(0, "Bow", "bow", "\uE831", TextColor.fromRgb(0x964B00)),
+    BED(1, "Bed", "bed", "\uE837", TextColor.fromRgb(0xFFB6C1)),
+    MINECART(2, "Minecart", "minecart", "\uE830", TextColor.fromRgb(0xFF0000)),
+    SPEED(3, "Speed", "speed", "\uE839", TextColor.fromRgb(0xFFE4B5)),
+    CREEPER(4, "Creeper", "creeper", "\uE838", TextColor.fromRgb(0x008000)),
+    DIA_SMP(5, "Diamond SMP", "dia_smp", "\uE832", TextColor.fromRgb(0x90D5FF)),
+    IRON_POT(6, "Iron Pot", "iron_pot", "\uE835", TextColor.fromRgb(0xc0c0c0)),
+    OG_VANILLA(7, "OG Vanilla", "og_vanilla", "\uE834", TextColor.fromRgb(0xD4AF37)),
+    MANHUNT(8, "Manhunt", "manhunt", "\uE833", TextColor.fromRgb(0x90EE90)),
+    MACE(9, "Mace", "mace", "\uE836", TextColor.fromRgb(0xA9A9A9));
 
     private final int id;
     private final String translationKey;
@@ -58,6 +58,12 @@ public enum GameMode implements TranslatableOption {
 
     public MutableText formatted() {
         return Text.literal(this.icon + " " + this.translationKey).styled(s -> s.withColor(this.iconColor));
+    }
+
+    public MutableText clientformatted() {
+        Text gamemode = Text.literal(this.translationKey).styled(s -> s.withColor(this.iconColor));
+
+        return Text.literal(this.icon).append(gamemode);
     }
 
     public GameMode next() {

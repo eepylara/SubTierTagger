@@ -115,7 +115,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 																.binding(GameMode.MINECART, SubtierConfig::getCurrentGameMode, SubtierConfig::setCurrentGameMode)
 																.controller(opt -> EnumControllerBuilder.create(opt)
 																		.enumClass(GameMode.class)
-																		.formatValue(GameMode::formatted))
+																		.formatValue(GameMode::clientformatted))
 																.build())
 														.build())
 												.build())
@@ -174,7 +174,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 
 							Text gamemode = Text.literal(gameMode.getTranslationKey()).formatted(Formatting.BOLD).styled(style -> style.withColor(gameMode.getIconColor()));
 
-							MutableText gamemodeText = Text.literal(gameMode.getIcon() + " ").styled(style -> style.withColor(gameMode.getIconColor())).append(gamemode).append(" - ").append(formattedTier);
+							MutableText gamemodeText = Text.literal(gameMode.getIcon() + " ").append(gamemode).append(" - ").append(formattedTier);
 
 							resultMessage.append(Text.literal("\n").append(gamemodeText));
 						}

@@ -34,7 +34,7 @@ public class ModMenu implements ModMenuApi {
                                         .binding(GameMode.MINECART, () -> SubtierConfig.getCurrentGameMode(), newVal -> SubtierConfig.setCurrentGameMode(newVal))
                                         .controller(opt -> EnumControllerBuilder.create(opt)
                                                 .enumClass(GameMode.class)
-                                                .formatValue(GameMode::formatted))
+                                                .formatValue(GameMode::clientformatted))
                                         .build())
                                 .build())
                         .build())

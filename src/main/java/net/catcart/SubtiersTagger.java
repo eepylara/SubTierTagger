@@ -11,6 +11,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class SubtiersTagger implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		SubtierConfig.HANDLER.load();
+
 
 
 		LOGGER.info("CartTierTagger initialized, and subtier commands registered.");
@@ -101,7 +103,7 @@ public class SubtiersTagger implements ModInitializer {
 
 					String icon = highestGameMode.getIcon();
 					TextColor color = highestGameMode.getIconColor();
-					Text gamemodeText = Text.literal(icon).styled(style -> style.withColor(color));
+					Text gamemodeText = Text.literal(icon).styled(style -> style.withFont(Identifier.of("subtierstagger", "font/default.json")));
 
 					mutableText.append(" ").append(gamemodeText);
 
@@ -130,7 +132,7 @@ public class SubtiersTagger implements ModInitializer {
 
 			String icon = activeMode.getIcon();
 			TextColor color = activeMode.getIconColor();
-			Text gamemodeText = Text.literal(icon).styled(style -> style.withColor(color));
+			Text gamemodeText = Text.literal(icon);
 
 			mutableText.append(" ").append(gamemodeText);
 
