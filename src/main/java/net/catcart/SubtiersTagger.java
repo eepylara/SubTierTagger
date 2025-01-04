@@ -103,7 +103,7 @@ public class SubtiersTagger implements ModInitializer {
 
 					String icon = highestGameMode.getIcon();
 					TextColor color = highestGameMode.getIconColor();
-					Text gamemodeText = Text.literal(icon).styled(style -> style.withFont(Identifier.of("subtierstagger", "font/default.json")));
+					Text gamemodeText = Text.literal(icon);
 
 					mutableText.append(" ").append(gamemodeText);
 
