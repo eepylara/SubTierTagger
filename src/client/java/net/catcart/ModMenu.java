@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class ModMenu implements ModMenuApi {
+    private static Boolean isenabled = SubtierConfig.getEnabled();
+
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         return parent -> YetAnotherConfigLib.createBuilder()
@@ -34,7 +36,7 @@ public class ModMenu implements ModMenuApi {
                                         .binding(GameMode.MINECART, () -> SubtierConfig.getCurrentGameMode(), newVal -> SubtierConfig.setCurrentGameMode(newVal))
                                         .controller(opt -> EnumControllerBuilder.create(opt)
                                                 .enumClass(GameMode.class)
-                                                .formatValue(GameMode::formatted))
+                                                .formatValue(GameMode::configFormatted))
                                         .build())
                                 .build())
                         .build())

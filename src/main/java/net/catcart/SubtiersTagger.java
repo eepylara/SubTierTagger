@@ -1,13 +1,18 @@
 package net.catcart;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
 import net.catcart.config.GameMode;
 import net.catcart.config.SubtierConfig;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.minecraft.SharedConstants;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -21,36 +26,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static net.fabricmc.fabric.impl.resource.loader.ModResourcePackUtil.GSON;
 
 public class SubtiersTagger implements ModInitializer {
 	public static final String MOD_ID = "subtierstagger";
-
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+	private static final String UPDATE_URL = "https://api.modrinth.com/v2/project/subtiertagger/version?game_versions=%s";
 
-	// Cache for tier information
-	private static final ConcurrentHashMap<UUID, CachedTier> playerTiers = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<UUID, CopyOnWriteArrayList<Pair<GameMode, CachedTier>>> allPlayerTiers = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<UUID, Text> displayNameCache = new ConcurrentHashMap<>();
 	private static final CopyOnWriteArraySet<UUID> ongoingFetches = new CopyOnWriteArraySet<>();
-	private static final long DISPLAY_NAME_CACHE_EXPIRATION = 1000; // 1 second
-	private static final long MIN_FETCH_INTERVAL = 60000; // 1 minute
 	private static final String NO_TIER = "NoTier";
+
+	@Getter
+	private static final HttpClient client = HttpClient.newHttpClient();
+
+	@Getter
+	private static Version latestVersion = null;
+	private static final AtomicBoolean isObsolete = new AtomicBoolean(false);
 
 	@Override
 	public void onInitialize() {
 		SubtierConfig.HANDLER.load();
 
-		LOGGER.info("CartTierTagger initialized, and subtier commands registered.");
+		LOGGER.info("SubTierTagger initialized, and subtier commands registered.");
+
+		checkForUpdates();
 	}
 
 	public static Text appendTier(PlayerEntity player, Text text) {
@@ -59,12 +71,19 @@ public class SubtiersTagger implements ModInitializer {
 		GameMode lastUsedMode = SubtierConfig.getLastUsedGameMode();
 
 		if (lastUsedMode != activeMode){
+			SubtierConfig.setLastUsedGameMode(activeMode);
 			displayNameCache.clear();
 		}
 
+		if (SubtierConfig.getEnabled() == false){
+			SubtierConfig.setLastUsedGameMode(activeMode);
+			clearAllCaches();
+			return text;
+		}
 
 		if (!allPlayerTiers.containsKey(uuid)) {
 			fetchTierAsync(player);
+			SubtierConfig.setLastUsedGameMode(activeMode);
 			return text; // Return original text while data is being fetched
 		}
 
@@ -72,11 +91,13 @@ public class SubtiersTagger implements ModInitializer {
 		CopyOnWriteArrayList<Pair<GameMode, CachedTier>> tiers = allPlayerTiers.get(uuid);
 		if (tiers == null || tiers.size() <= index) {
 			LOGGER.warn("Tier data not initialized correctly for player: {}", player.getName().getString());
+			SubtierConfig.setLastUsedGameMode(activeMode);
 			return text;
 		}
 
 		CachedTier cachedTier = tiers.get(index).getRight();
 		if (cachedTier == null || cachedTier.isExpired()) {
+			SubtierConfig.setLastUsedGameMode(activeMode);
 			return text; // Skip if no valid tier data
 		}
 
@@ -117,10 +138,12 @@ public class SubtiersTagger implements ModInitializer {
 			}
 
 			if (cachedTier.isExpired()) {
+				SubtierConfig.setLastUsedGameMode(activeMode);
 				return text;
 			}
 
 			if (displayNameCache.containsKey(uuid)) {
+				SubtierConfig.setLastUsedGameMode(activeMode);
 				return displayNameCache.get(uuid);
 			}
 
@@ -134,7 +157,7 @@ public class SubtiersTagger implements ModInitializer {
 			String icon = activeMode.getIcon();
 			Text gamemodeText = Text.literal(icon);
 
-			mutableText.append(" ").append(gamemodeText);
+			mutableText.append(gamemodeText);
 
 			SubtierConfig.setLastUsedGameMode(activeMode);
 			displayNameCache.put(uuid, mutableText);
@@ -145,7 +168,43 @@ public class SubtiersTagger implements ModInitializer {
 		return text;
 	}
 
+	private static void checkForUpdates() {
+		String versionParam = "[\"%s\"]".formatted(SharedConstants.getGameVersion().getName());
+		String fullUrl = UPDATE_URL.formatted(URLEncoder.encode(versionParam, StandardCharsets.UTF_8));
 
+		HttpRequest request = HttpRequest.newBuilder(URI.create(fullUrl)).GET().build();
+
+		client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+				.thenApply(r -> {
+					String body = r.body();
+					JsonArray array = GSON.fromJson(body, JsonArray.class);
+
+					if (!array.isEmpty()) {
+						JsonObject root = array.get(0).getAsJsonObject();
+
+						String versionName = root.get("name").getAsString();
+						if (versionName != null && versionName.toLowerCase(Locale.ROOT).startsWith("[o")) {
+							isObsolete.set(true);
+						}
+
+						String latestVer = root.get("version_number").getAsString();
+						try {
+							return Version.parse(latestVer);
+						} catch (VersionParsingException e) {
+							LOGGER.warn("Could not parse version number {}", latestVer);
+						}
+					}
+
+					return null;
+				})
+				.exceptionally(t -> {
+					LOGGER.warn("Error checking for updates", t);
+					return null;
+				}).thenAccept(v -> {
+					LOGGER.info("Found latest version {}", v.getFriendlyString());
+					latestVersion = v;
+				});
+	}
 
 	private static int compareTiers(String tier1, String tier2) {
 		List<String> tierOrder = Arrays.asList("LT5", "HT5", "LT4", "HT4", "LT3", "HT3", "RLT2", "LT2", "RHT2", "RHT1", "LT1", "RTLT1", "RLT1", "HT1");
@@ -154,9 +213,9 @@ public class SubtiersTagger implements ModInitializer {
 
 
 	public static void clearAllCaches() {
-		playerTiers.clear();
+		allPlayerTiers.clear();
 		displayNameCache.clear();
-		LOGGER.info("Cleared all caches on server disconnect.");
+		LOGGER.info("Cleared all caches.");
 	}
 
 

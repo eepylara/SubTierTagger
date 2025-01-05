@@ -14,17 +14,14 @@ public class ExampleMixin {
 
 	@ModifyReturnValue(method = "getDisplayName", at = @At("RETURN"))
 	public Text prependTier(Text original) {
-		if (SubtierConfig.getEnabled() == true){
-			PlayerEntity self = (PlayerEntity) (Object) this;
+		PlayerEntity self = (PlayerEntity) (Object) this;
 
-			Text cachedName = SubtiersTagger.getDisplayNameCache().get(self.getUuid());
-			if (cachedName != null) {
-				return cachedName;
-			}
-
-			return SubtiersTagger.appendTier(self, original);
-		} else {
-			return original;
+		Text cachedName = SubtiersTagger.getDisplayNameCache().get(self.getUuid());
+		if (cachedName != null) {
+			return cachedName;
 		}
+
+		return SubtiersTagger.appendTier(self, original);
+
 	}
 }

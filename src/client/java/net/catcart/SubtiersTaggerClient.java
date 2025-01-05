@@ -41,6 +41,8 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 
 	private static KeyBinding myKeyBinding;
 
+	private static Boolean isenabled = SubtierConfig.getEnabled();
+
 	@Override
 	public void onInitializeClient() {
 
@@ -116,7 +118,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 														.name(Text.literal("Config"))
 														.option(Option.<Boolean>createBuilder()
 																.name(Text.literal("Enable"))
-																.binding(true, SubtierConfig::getEnabled, SubtierConfig::setEnabled)
+																.binding(true, () -> SubtierConfig.getEnabled(), SubtierConfig::setEnabled)
 																.controller(opt -> BooleanControllerBuilder.create(opt).coloured(true))
 																.build())
 														.option(Option.<GameMode>createBuilder()
