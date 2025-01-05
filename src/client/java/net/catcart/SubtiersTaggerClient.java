@@ -1,8 +1,5 @@
 package net.catcart;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -17,11 +14,9 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -33,25 +28,20 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import static net.catcart.SubtiersTagger.LOGGER;
-
 public class SubtiersTaggerClient implements ClientModInitializer {
-	private static final Identifier FONT_JSON = Identifier.of("subtierstagger", "font/default.json");
+	public static final String[] gamemodes = new String[]{"minecart", "bed", "mace", "og_vanilla", "speed", "dia_smp", "iron_pot", "creeper", "bow", "manhunt"};
+
 	private static KeyBinding myKeyBinding;
-	private final Map<Character, Identifier> iconTextures = new HashMap<>();
+
+	private static Boolean isenabled = SubtierConfig.getEnabled();
 
 	@Override
 	public void onInitializeClient() {
@@ -128,7 +118,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 														.name(Text.literal("Config"))
 														.option(Option.<Boolean>createBuilder()
 																.name(Text.literal("Enable"))
-																.binding(true, SubtierConfig::getEnabled, SubtierConfig::setEnabled)
+																.binding(true, () -> SubtierConfig.getEnabled(), SubtierConfig::setEnabled)
 																.controller(opt -> BooleanControllerBuilder.create(opt).coloured(true))
 																.build())
 														.option(Option.<GameMode>createBuilder()
@@ -136,7 +126,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 																.binding(GameMode.MINECART, SubtierConfig::getCurrentGameMode, SubtierConfig::setCurrentGameMode)
 																.controller(opt -> EnumControllerBuilder.create(opt)
 																		.enumClass(GameMode.class)
-																		.formatValue(GameMode::clientformatted))
+																		.formatValue(GameMode::configFormatted))
 																.build())
 														.build())
 												.build())
@@ -149,10 +139,6 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 		});
 
 
-	}
-
-	public Map<Character, Identifier> getIconTextures() {
-		return iconTextures;
 	}
 
 	private void fetchAndDisplayTiers(String username) {
