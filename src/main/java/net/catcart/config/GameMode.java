@@ -60,8 +60,8 @@ public enum GameMode implements TranslatableOption {
         return Text.literal(this.icon + " " + this.translationKey).styled(s -> s.withColor(this.iconColor));
     }
 
-    public MutableText clientformatted() {
-        Text gamemode = Text.literal(this.translationKey).styled(s -> s.withColor(this.iconColor));
+    public MutableText configFormatted() {
+        Text gamemode = Text.literal(this.translationKey).styled(style -> style.withColor(this.iconColor));
 
         return Text.literal(this.icon).append(gamemode);
     }
