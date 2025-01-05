@@ -99,7 +99,7 @@ public class SubtiersTaggerClient implements ClientModInitializer {
 		});
 
 		myKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"Open Config",
+				"key.subtiertagger.open_config",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_H,
 				"SubTierTagger"
