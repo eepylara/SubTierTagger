@@ -134,7 +134,7 @@ public class SubtiersTagger implements ModInitializer {
 			TextColor color = activeMode.getIconColor();
 			Text gamemodeText = Text.literal(icon);
 
-			mutableText.append(" ").append(gamemodeText);
+			mutableText.append(gamemodeText);
 
 			SubtierConfig.setLastUsedGameMode(activeMode);
 			displayNameCache.put(uuid, mutableText);
