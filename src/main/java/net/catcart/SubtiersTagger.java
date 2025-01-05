@@ -61,8 +61,6 @@ public class SubtiersTagger implements ModInitializer {
 		SubtierConfig.HANDLER.load();
 
 		LOGGER.info("SubTierTagger initialized, and subtier commands registered.");
-
-		checkForUpdates();
 	}
 
 	public static Text appendTier(PlayerEntity player, Text text) {
@@ -166,44 +164,6 @@ public class SubtiersTagger implements ModInitializer {
 
 		fetchTierAsync(player);
 		return text;
-	}
-
-	private static void checkForUpdates() {
-		String versionParam = "[\"%s\"]".formatted(SharedConstants.getGameVersion().getName());
-		String fullUrl = UPDATE_URL.formatted(URLEncoder.encode(versionParam, StandardCharsets.UTF_8));
-
-		HttpRequest request = HttpRequest.newBuilder(URI.create(fullUrl)).GET().build();
-
-		client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-				.thenApply(r -> {
-					String body = r.body();
-					JsonArray array = GSON.fromJson(body, JsonArray.class);
-
-					if (!array.isEmpty()) {
-						JsonObject root = array.get(0).getAsJsonObject();
-
-						String versionName = root.get("name").getAsString();
-						if (versionName != null && versionName.toLowerCase(Locale.ROOT).startsWith("[o")) {
-							isObsolete.set(true);
-						}
-
-						String latestVer = root.get("version_number").getAsString();
-						try {
-							return Version.parse(latestVer);
-						} catch (VersionParsingException e) {
-							LOGGER.warn("Could not parse version number {}", latestVer);
-						}
-					}
-
-					return null;
-				})
-				.exceptionally(t -> {
-					LOGGER.warn("Error checking for updates", t);
-					return null;
-				}).thenAccept(v -> {
-					LOGGER.info("Found latest version {}", v.getFriendlyString());
-					latestVersion = v;
-				});
 	}
 
 	private static int compareTiers(String tier1, String tier2) {
