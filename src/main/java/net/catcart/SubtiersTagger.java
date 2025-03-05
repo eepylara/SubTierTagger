@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SubtiersTagger implements ModInitializer {
 	public static final String MOD_ID = "subtierstagger";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	private static final String UPDATE_URL = "https://api.modrinth.com/v2/project/subtiertagger/version?game_versions=%s";
 
 	private static final ConcurrentHashMap<UUID, CopyOnWriteArrayList<Pair<GameMode, CachedTier>>> allPlayerTiers = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<UUID, Text> displayNameCache = new ConcurrentHashMap<>();
