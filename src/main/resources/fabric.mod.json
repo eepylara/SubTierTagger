@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "subtiertagger",
-	"version": "1.1.1",
+	"version": "1.2.0",
 	"name": "SubTierTagger",
 	"description": "A TierTagger Mod for the Subtiers Tierlist",
 	"authors": [
