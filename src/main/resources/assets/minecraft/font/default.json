@@ -44,7 +44,7 @@
         },
         {
             "type": "bitmap",
-            "file": "subtierstagger:icons/mace.png",
+            "file": "subtierstagger:icons/end_crystal_icon.png",
             "ascent": 8,
             "height": 8,
             "chars": ["\uE836"]
@@ -69,6 +69,20 @@
             "ascent": 8,
             "height": 8,
             "chars": ["\uE839"]
+        },
+        {
+            "type": "bitmap",
+            "file": "subtierstagger:icons/elytra_icon.png",
+            "ascent": 8,
+            "height": 8,
+            "chars": ["\uE840"]
+        },
+        {
+            "type": "bitmap",
+            "file": "subtierstagger:icons/trident_icon.png",
+            "ascent": 8,
+            "height": 8,
+            "chars": ["\uE841"]
         }
 
     ]
