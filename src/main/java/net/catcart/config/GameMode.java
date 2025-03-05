@@ -20,8 +20,8 @@ public enum GameMode implements TranslatableOption {
     IRON_POT(6, "Iron Pot", "iron_pot", "\uE835", TextColor.fromRgb(0xc0c0c0)),
     OG_VANILLA(7, "OG Vanilla", "og_vanilla", "\uE834", TextColor.fromRgb(0xD4AF37)),
     MANHUNT(8, "Manhunt", "manhunt", "\uE833", TextColor.fromRgb(0x90EE90)),
-    DIA_VANILLA(9, "Diamond Vanilla", "dia_crystal", "\uE836", TextColor.fromRgb(0xA9A9A9)),
-    ELYTRA(10, "Elytra", "elytra", "\uE840", TextColor.fromRgb(0x0078FF)),
+    DIA_VANILLA(9, "Diamond Vanilla", "dia_crystal", "\uE836", TextColor.fromRgb(0x0078FF)),
+    ELYTRA(10, "Elytra", "elytra", "\uE840", TextColor.fromRgb(0x7475B4)),
     TRIDENT(11, "Trident", "trident", "\uE841", TextColor.fromRgb(0x42957E));
 
     private final int id;
