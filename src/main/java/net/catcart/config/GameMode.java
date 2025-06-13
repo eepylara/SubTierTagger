@@ -17,7 +17,7 @@ public enum GameMode implements TranslatableOption {
     SPEED(3, "Speed", "speed", "\uE839", TextColor.fromRgb(0xFFE4B5)),
     CREEPER(4, "Creeper", "creeper", "\uE838", TextColor.fromRgb(0x008000)),
     DIA_SMP(5, "Diamond SMP", "dia_smp", "\uE832", TextColor.fromRgb(0x90D5FF)),
-    IRON_POT(6, "Iron Pot", "iron_pot", "\uE835", TextColor.fromRgb(0xc0c0c0)),
+    DEBUFF(6, "DeBuff", "debuff", "\uE835", TextColor.fromRgb(0xc0c0c0)),
     OG_VANILLA(7, "OG Vanilla", "og_vanilla", "\uE834", TextColor.fromRgb(0xD4AF37)),
     MANHUNT(8, "Manhunt", "manhunt", "\uE833", TextColor.fromRgb(0x90EE90)),
     DIA_VANILLA(9, "Diamond Vanilla", "dia_crystal", "\uE836", TextColor.fromRgb(0x0078FF)),
