@@ -3,85 +3,85 @@
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/tnt_minecart.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE830"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/bow.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE831"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/chorus_fruit.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE832"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/compass_13.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE833"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/golden_apple.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE834"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/debuff.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE835"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/end_crystal_icon.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE836"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/red_bed.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE837"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/spawn_egg.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE838"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/splash_potion.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE839"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/elytra_icon.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE840"]
     },
     {
       "type": "bitmap",
       "file": "subtierstagger:icons/trident_icon.png",
-      "ascent": 16,
-      "height": 16,
+      "ascent": 8,
+      "height": 8,
       "chars": ["\uE841"]
     }
 

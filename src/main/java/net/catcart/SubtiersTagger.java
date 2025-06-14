@@ -108,7 +108,7 @@ public class SubtiersTagger implements ModInitializer {
 				}
 
 				if (highestTier != null) {
-					MutableText mutableText = Text.literal(text.getString());
+					MutableText mutableText = text.copy();
 					int tierColor = SubtierConfig.getColor(highestTier.getTier());
 					Text formattedTier = Text.literal(highestTier.getTier()).styled(style -> style.withColor(TextColor.fromRgb(tierColor)));
 
